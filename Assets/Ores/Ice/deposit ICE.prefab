@@ -1,0 +1,122 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &8305683638727920978
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2362478957175917533, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_Name
+      value: deposit ICE
+      objectReference: {fileID: 0}
+    - target: {fileID: 2362478957175917533, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 12.510946
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.957
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 21.865917
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.7071067
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0.7071068
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3135321954282508647, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4308197066605193736, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 976c336296eda5a48b741e20dc3efe11, type: 2}
+    m_RemovedComponents:
+    - {fileID: 1044043826539399934, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+    - {fileID: 250383132340137976, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+    - {fileID: 2788257356681372818, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2362478957175917533, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2607314205686147692}
+    - targetCorrespondingSourceObject: {fileID: 2362478957175917533, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4473302841153994732}
+  m_SourcePrefab: {fileID: 100100000, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+--- !u!1 &6019766082475689615 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2362478957175917533, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
+  m_PrefabInstance: {fileID: 8305683638727920978}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &-2607314205686147692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6019766082475689615}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63276ea5bdece7f4abfda01a880682c6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DepositScript
+  itemName: Ice
+  itemInventoryName: Ice
+  icon: {fileID: 21300000, guid: 4f037994c48f4eb43a4e1eb00eaf058b, type: 3}
+  maxStackSize: 64
+  maxHp: 100
+  currentHp: 0
+  hpPerItem: 5
+--- !u!64 &4473302841153994732
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6019766082475689615}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4711208715938537054, guid: e7f160f3730ddcd4396563ab8730ba48, type: 3}
