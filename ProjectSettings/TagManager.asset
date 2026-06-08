@@ -3,12 +3,13 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 3
-  tags: []
+  tags:
+  - DroneFlag
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Drone
   - Water
   - UI
   - Items
@@ -16,8 +17,8 @@ TagManager:
   - ViewModel
   - Interactable
   - Post Processing
-  - 
-  - 
+  - Ground
+  - Victory
   - 
   - 
   - 

@@ -6,9 +6,9 @@ public class InteractionHandler : MonoBehaviour
 {
     [Header("Settings")]
     [SerializeField] private float interactionDistance = 3f;
-    [SerializeField] private LayerMask itemLayer;
+    [SerializeField] private LayerMask itemLayer; // Ujisti se, že Tlačítko, Díra, STAVBA, BARVY i WORKBENCH jsou na stejné vrstvě!
     [SerializeField] private float cleanupDelay = 0.1f;
-    private float currentCleanupTimer = 0f;
+    private float currentCleanupTimer;
 
     [Header("UI References")]
     [SerializeField] private GameObject interactionUI;
@@ -22,9 +22,16 @@ public class InteractionHandler : MonoBehaviour
     [SerializeField] private float highlightCrosshairAlpha = 1f;
 
     private Camera mainCamera;
+    
+    // Na co zrovna koukáme
     private PickupItem currentTargetItem; 
-    private StorageUnit currentTargetStorage; // Přidáno pro bedny
-    private bool isHovering = false;
+    private StorageUnit currentTargetStorage;
+    private DeliveryHole currentDeliveryHole;     
+    private DeliveryButton currentDeliveryButton; 
+    private BuildingColorInteract currentBuildingColorStation; 
+    private Workbench currentWorkbench; // <--- NOVÉ PRO WORKBENCH
+    
+    private bool isHovering;
 
     private void Start()
     {
@@ -35,6 +42,14 @@ public class InteractionHandler : MonoBehaviour
 
     private void Update()
     {
+        // UNIVERZÁLNÍ POJISTKA: Myš je odemčená = jsme v menu
+        if (Cursor.lockState == CursorLockMode.None)
+        {
+            if (isHovering) ClearInteraction(); // Vymaže texty z obrazovky
+            return; // Zabrání střílení paprsků
+        }
+
+        // Původní pojistka inventáře
         if (InventoryHandler.Instance != null && InventoryHandler.Instance.IsInventoryOpen)
         {
             if (isHovering) ClearInteraction();
@@ -47,42 +62,99 @@ public class InteractionHandler : MonoBehaviour
 
     private void HandleRaycast()
     {
-        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0));
+        Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)); 
         RaycastHit hit;
 
         if (Physics.Raycast(ray, out hit, interactionDistance, itemLayer))
         {
-            // Zkusíme najít komponentu na tom, co jsme trefili (nebo na jeho rodiči)
             PickupItem item = hit.collider.GetComponentInParent<PickupItem>();
             StorageUnit storage = hit.collider.GetComponentInParent<StorageUnit>();
+            DeliveryHole hole = hit.collider.GetComponentInParent<DeliveryHole>();       
+            DeliveryButton button = hit.collider.GetComponentInParent<DeliveryButton>(); 
+            BuildingColorInteract colorStation = hit.collider.GetComponentInParent<BuildingColorInteract>(); 
+            Workbench workbench = hit.collider.GetComponentInParent<Workbench>(); // <--- NOVÉ PRO WORKBENCH
 
-            if (item != null)
+            // 1. Trefili jsme ITEM
+            if (item != null) 
             {
                 currentCleanupTimer = 0f;
-                if (currentTargetItem != item)
+                if (currentTargetItem != item) 
                 {
+                    ClearInteractionTargets(); 
                     currentTargetItem = item;
-                    currentTargetStorage = null;
                     isHovering = true;
                     UpdateUI(item.itemName, item.itemInteractionText, item.itemInteractionKey);
                 }
                 return;
             }
-            else if (storage != null)
+            // 2. Trefili jsme STORAGE (Truhlu)
+            else if (storage != null) 
             {
                 currentCleanupTimer = 0f;
-                if (currentTargetStorage != storage)
+                if (currentTargetStorage != storage) 
                 {
+                    ClearInteractionTargets();
                     currentTargetStorage = storage;
-                    currentTargetItem = null;
                     isHovering = true;
-                    UpdateUI("Storage", "Open", "E"); // Tady můžeš dát storage.storageName
+                    UpdateUI("Storage", "Open", "E");
+                }
+                return;
+            }
+            // 3. Trefili jsme DÍRU (Terminál)
+            else if (currentDeliveryHole != hole)
+            {
+                currentCleanupTimer = 0f;
+                if (currentDeliveryHole != hole)
+                {
+                    ClearInteractionTargets();
+                    currentDeliveryHole = hole;
+                    isHovering = true;
+                    UpdateUI("Terminal", "Open", "E"); 
+                }
+                return;
+            }
+            // 4. Trefili jsme TLAČÍTKO
+            else if (button != null)
+            {
+                currentCleanupTimer = 0f;
+                if (currentDeliveryButton != button)
+                {
+                    ClearInteractionTargets();
+                    currentDeliveryButton = button;
+                    isHovering = true;
+                    UpdateUI("Terminal", "Send", "E");
+                }
+                return;
+            }
+            // 5. Trefili jsme BARVY (Tablet nebo budovu)
+            else if (colorStation != null)
+            {
+                currentCleanupTimer = 0f;
+                if (currentBuildingColorStation != colorStation)
+                {
+                    ClearInteractionTargets();
+                    currentBuildingColorStation = colorStation;
+                    isHovering = true;
+                    UpdateUI("Building", colorStation.hoverText, "E"); 
+                }
+                return;
+            }
+            // 6. Trefili jsme WORKBENCH <--- NOVÉ PRO WORKBENCH
+            else if (workbench != null)
+            {
+                currentCleanupTimer = 0f;
+                if (currentWorkbench != workbench)
+                {
+                    ClearInteractionTargets();
+                    currentWorkbench = workbench;
+                    isHovering = true;
+                    // Vytáhneme si text "Open Workbench" přímo ze stolu
+                    UpdateUI("Bench", workbench.hoverText, "E"); 
                 }
                 return;
             }
         }
 
-        // Pokud nic netrefíme
         if (isHovering)
         {
             currentCleanupTimer += Time.deltaTime;
@@ -95,12 +167,11 @@ public class InteractionHandler : MonoBehaviour
 
     private void HandleInput()
     {
-        if (!isHovering) return;
+        if (!isHovering) return; 
 
         if (Input.GetKeyDown(KeyCode.E))
         {
-            // SEBRÁNÍ ITEMU
-            if (currentTargetItem != null)
+            if (currentTargetItem != null) 
             {
                 int leftOver = InventoryHandler.Instance.AddItem(
                     currentTargetItem.itemName, 
@@ -120,10 +191,30 @@ public class InteractionHandler : MonoBehaviour
                     currentTargetItem.quantity = leftOver;
                 }
             }
-            // OTEVŘENÍ STORAGE
-            else if (currentTargetStorage != null)
+            else if (currentTargetStorage != null) 
             {
                 currentTargetStorage.OpenStorage();
+                ClearInteraction();
+            }
+            else if (currentDeliveryHole != null)
+            {
+                currentDeliveryHole.Interact();
+                ClearInteraction();
+            }
+            else if (currentDeliveryButton != null)
+            {
+                currentDeliveryButton.Interact();
+                ClearInteraction();
+            }
+            else if (currentBuildingColorStation != null)
+            {
+                currentBuildingColorStation.Interact();
+                ClearInteraction();
+            }
+            // --- NOVÉ PRO WORKBENCH ---
+            else if (currentWorkbench != null)
+            {
+                currentWorkbench.Interact(); // Otevře menu stolu
                 ClearInteraction();
             }
         }
@@ -138,11 +229,20 @@ public class InteractionHandler : MonoBehaviour
         SetCrosshairAlpha(highlightCrosshairAlpha);
     }
 
+    private void ClearInteractionTargets()
+    {
+        currentTargetItem = null;
+        currentTargetStorage = null;
+        currentDeliveryHole = null;
+        currentDeliveryButton = null;
+        currentBuildingColorStation = null;
+        currentWorkbench = null; // <--- NOVÉ PRO WORKBENCH
+    }
+
     private void ClearInteraction()
     {
         isHovering = false;
-        currentTargetItem = null;
-        currentTargetStorage = null;
+        ClearInteractionTargets();
         if (interactionUI) interactionUI.SetActive(false);
         SetCrosshairAlpha(normalCrosshairAlpha);
     }

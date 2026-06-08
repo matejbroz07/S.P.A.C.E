@@ -3,6 +3,15 @@ using TMPro;
 
 public class DrillController : MonoBehaviour
 {
+    [Header("Multitool Settings")]
+    public bool isBuildingMode = false;
+    public KeyCode switchKey = KeyCode.B;
+    public BuildingSystem buildingSystem;
+    public GameObject core;
+    public GameObject motor;
+    public Material buildingMaterial;
+    public Material miningMaterial;
+    
     [Header("Cameras")]
     public Camera mainCam;
 
@@ -35,15 +44,30 @@ public class DrillController : MonoBehaviour
     {
         line.enabled = false;
         if (particles != null) particles.Stop();
+        
+        // Na startu vypneme stavění a zapneme těžbu
+        if (buildingSystem != null) buildingSystem.enabled = false;
+        
         UpdateUI(null);
         currentRotationSpeed = idleRotationSpeed;
     }
 
     void Update()
     {
+        // 1. PŘEPÍNÁNÍ MÓDŮ
+        if (Input.GetKeyDown(switchKey))
+        {
+            ToggleMode();
+        }
+
+        // Pokud jsme ve stavěcím módu, zbytek Update (těžba) se neprovede
+        if (isBuildingMode) return;
+
+        // 2. LOGIKA TĚŽBY (běží jen když nejsme v Building Mode)
         CheckDepositUnderCrosshair();
         HandleRotation();
 
+        // Podmínka pro střelbu (přidal jsem kontrolu !isBuildingMode pro jistotu)
         if (Input.GetMouseButton(0) && currentDeposit != null && !InventoryHandler.Instance.IsInventoryOpen)
         {
             FireLaser();
@@ -51,15 +75,51 @@ public class DrillController : MonoBehaviour
         }
         else
         {
-            line.enabled = false;
-            currentRotationSpeed = Mathf.Lerp(currentRotationSpeed, idleRotationSpeed, Time.deltaTime * 2f);
+            StopLaserEffects(); // Vyčlenil jsem to do metody, abych ji mohl volat i při přepnutí
+        }
+    }
+
+    void ToggleMode()
+    {
+        isBuildingMode = !isBuildingMode; // Přepne true/false
+
+        if (isBuildingMode)
+        {
+            // --- ZAPÍNÁME STAVĚNÍ ---
+            if (buildingSystem != null) buildingSystem.enabled = true; // Objeví se duch
             
-            if (particles != null) particles.Stop();
-            if (impactParticles != null) 
-            {
-                impactParticles.Stop();
-                impactParticles.Clear();
-            }
+            // Okamžitě vypneme efekty těžby
+            StopLaserEffects();
+            
+            // UI Info
+            if (oreText) oreText.text = "build mode";
+            if (oreLeftText) oreLeftText.text = "";
+            motor.GetComponent<Renderer>().material = buildingMaterial;
+            core.GetComponent<Renderer>().material = buildingMaterial;
+        }
+        else
+        {
+            // --- ZAPÍNÁME TĚŽBU ---
+            if (buildingSystem != null) buildingSystem.enabled = false; // Duch zmizí
+            
+            motor.GetComponent<Renderer>().material = miningMaterial;
+            core.GetComponent<Renderer>().material = miningMaterial;
+            
+            // Reset UI
+            UpdateUI(null);
+        }
+    }
+
+    void StopLaserEffects()
+    {
+        line.enabled = false;
+        currentRotationSpeed = Mathf.Lerp(currentRotationSpeed, idleRotationSpeed, Time.deltaTime * 2f);
+        
+        if (particles != null) particles.Stop();
+        if (impactParticles != null) 
+        {
+            impactParticles.Stop();
+            impactParticles.Clear();
         }
     }
 

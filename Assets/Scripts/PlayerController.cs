@@ -22,7 +22,13 @@ public class PlayerController : MonoBehaviour
     public InputActionReference lookAction;
     public InputActionReference jumpAction;
     public InputActionReference sprintAction;
-
+    
+    [Header("Drone Flag Settings")]
+    public GameObject flagPrefab;              // Prefab tvé vlajky (musí mít tag DroneFlag!)
+    public InputActionReference placeFlagAction; // Akce pro položení (kolečko myši)
+    public float flagPlacementRange = 15f;     // Jak daleko může hráč vlajku zapíchnout
+    public LayerMask placementLayer;
+    
     [Header("Air Control")]
     public float airControl = 0.4f;
 
@@ -36,6 +42,8 @@ public class PlayerController : MonoBehaviour
     private Vector3 horizontalVelocity = Vector3.zero;
     private float bobTimer;
     private Vector3 originalCameraPos;
+    
+    private GameObject activeFlagInstance;
 
     private void Awake()
     {
@@ -69,8 +77,28 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        // UNIVERZÁLNÍ POJISTKA: Pokud máme odemčenou myš (jakékoliv menu)
+        if (Cursor.lockState == CursorLockMode.None)
+        {
+            // Vymažeme rychlost, aby hráč nedojížděl jako na ledě
+            horizontalVelocity = Vector3.zero; 
+            
+            // Stále aplikujeme gravitaci, kdybys menu otevřel ve výskoku
+            velocity.y += gravity * Time.deltaTime;
+            controller.Move(Vector3.up * velocity.y * Time.deltaTime);
+            
+            // Uknončíme Update -> žádné otáčení kamery, žádné chození
+            return; 
+        }
+
         HandleMovement();
-        if(!InventoryHandler.Instance.IsInventoryOpen) HandleCamera();
+        HandleCamera();
+        
+        // Zde případně tvé další věci jako HandleFlagPlacement() atd.
+        if (!InventoryHandler.Instance.IsInventoryOpen) 
+        {
+            HandleFlagPlacement();
+        }
     }
 
     private void HandleMovement()
@@ -82,14 +110,13 @@ public class PlayerController : MonoBehaviour
         if (isGrounded && velocity.y < 0)
             velocity.y = -2f;
 
-        bool wantsToSprint = sprintAction.action.IsPressed() && input.magnitude > 0.1f; // Chce sprintovat a hýbe se
-        bool canSprint = vitalsController != null && vitalsController.CanSprint(); // Má na to energii
+        bool wantsToSprint = sprintAction.action.IsPressed() && input.magnitude > 0.1f;
+        bool canSprint = vitalsController != null && vitalsController.CanSprint();
 
         bool isSprinting = wantsToSprint && canSprint;
 
         float currentSpeed = isSprinting ? sprintSpeed : moveSpeed;
         
-        // NOVÉ: Volání logiky staminy
         if (vitalsController != null)
         {
             vitalsController.HandleStamina(isSprinting);
@@ -140,6 +167,36 @@ public class PlayerController : MonoBehaviour
         {
             bobTimer = 0f;
             cameraTransform.localPosition = Vector3.Lerp(cameraTransform.localPosition, originalCameraPos, Time.deltaTime * 10f);
+        }
+    }
+    
+    // --- NOVÁ FUNKCE PRO POKLÁDÁNÍ VLAJKY (S 90° rotací) ---
+    private void HandleFlagPlacement()
+    {
+        // Zkontrolujeme, zda hráč zmáčkl tlačítko (kolečko myši)
+        if (placeFlagAction != null && placeFlagAction.action.WasPressedThisFrame())
+        {
+            Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
+            
+            if (Physics.Raycast(ray, out RaycastHit hit, flagPlacementRange, placementLayer))
+            {
+                // ZDE JE TA ZMĚNA: Rotace 90 na ose X, 0 na Y, 0 na Z
+                Quaternion flagRotation = Quaternion.Euler(-90f, 0f, 0f);
+
+                if (activeFlagInstance == null)
+                {
+                    // Vytvoříme vlajku rovnou s natočením 90°
+                    activeFlagInstance = Instantiate(flagPrefab, hit.point, flagRotation);
+                    Debug.Log($"<color=cyan>[Hráč] První vlajka postavena na pozici {hit.point}!</color>");
+                }
+                else
+                {
+                    // Přesuneme vlajku a pro jistotu jí znovu vnutíme rotaci 90°
+                    activeFlagInstance.transform.position = hit.point;
+                    activeFlagInstance.transform.rotation = flagRotation;
+                    Debug.Log($"<color=cyan>[Hráč] Vlajka přesunuta na novou pozici {hit.point}!</color>");
+                }
+            }
         }
     }
 }

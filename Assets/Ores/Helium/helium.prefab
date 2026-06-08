@@ -114,7 +114,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -7387706064836869012, guid: 5e033f7d239a4bd44b1703fd2a430b08, type: 3}
 --- !u!54 &7594317901334057722
@@ -140,7 +140,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
@@ -160,6 +160,6 @@ MonoBehaviour:
   itemInteractionText: Pick Up
   itemInteractionKey: E
   icon: {fileID: 21300000, guid: 230da2d21450fc84b87d314bc008c97b, type: 3}
-  quantity: 2
+  quantity: 1
   stackable: 1
   maxStackSize: 9

@@ -17,6 +17,10 @@ PrefabInstance:
       value: Titan
       objectReference: {fileID: 0}
     - target: {fileID: -7444130229547267163, guid: f54f575c2aa896e4180bc2bfef59f039, type: 3}
+      propertyPath: oreDropPrefab
+      value: 
+      objectReference: {fileID: 2236291703935450669, guid: be51c2e61c5df674cac4dc49064abe99, type: 3}
+    - target: {fileID: -7444130229547267163, guid: f54f575c2aa896e4180bc2bfef59f039, type: 3}
       propertyPath: itemInventoryName
       value: Titan Ore
       objectReference: {fileID: 0}

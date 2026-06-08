@@ -9,14 +9,13 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
     public Image iconImage;
     public TMP_Text countText;
 
-    // ZMĚNA: Místo pevného InventoryHandleru používáme Interface
     private IItemContainer currentContainer; 
     private int slotIndex;
     
     private GameObject dragGhost; 
     private Canvas rootCanvas; 
 
-    // Upravená Initialize, aby brala jakýkoliv kontejner (Inventory nebo Storage)
+    // Do jakého inventáře patří (container), na jakém místě (index), a jeho root canvas (canvas)
     public void Initialize(IItemContainer container, int index, Canvas canvas)
     {
         this.currentContainer = container;
@@ -35,10 +34,11 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         if (countText == null)
             countText = GetComponentInChildren<TMP_Text>();
     }
-
+    
+    // Tato funkce mění vzhled slotu podle dostupných informací
     public void UpdateSlot(InventoryItem item)
     {
-        if (item != null)
+        if (item != null) // Pokud v něm item je ukážeme informace o itemu
         {
             iconImage.sprite = item.icon;
             iconImage.enabled = true;
@@ -46,7 +46,7 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
             if (countText != null)
                 countText.text = (item.stackable && item.quantity > 1) ? item.quantity.ToString() : "";
         }
-        else
+        else // Pokud v něm není item nic neukazujem 
         {
             iconImage.sprite = null;
             iconImage.enabled = false;
@@ -67,7 +67,6 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        // Kontrola přes interface
         if (currentContainer.GetItem(slotIndex) == null) return;
         
         if (rootCanvas == null) return; 
@@ -90,18 +89,14 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         SetAlpha(1f);
     }
 
-    // --- HLAVNÍ ZMĚNA ZDE ---
     public void OnDrop(PointerEventData eventData)
     {
         ItemSlotUI sourceSlot = eventData.pointerDrag?.GetComponent<ItemSlotUI>();
         
         if (sourceSlot != null)
         {
-            // 1. Pokud jsme ve stejném okně (Inventář -> Inventář), použijeme starou metodu (SWAP)
             if (sourceSlot.currentContainer == this.currentContainer)
             {
-                // Musíme přetypovat zpět na InventoryHandler pro vnitřní logiku, 
-                // nebo StorageUnit, pokud to podporuje.
                 if (currentContainer is InventoryHandler inv)
                 {
                     inv.SwapItems(sourceSlot.slotIndex, this.slotIndex);
@@ -111,7 +106,6 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                     storage.SwapItems(sourceSlot.slotIndex, this.slotIndex);
                 }
             }
-            // 2. Pokud jsme v jiném okně (Inventář -> Storage nebo naopak)
             else
             {
                 TransferItem(sourceSlot.currentContainer, sourceSlot.slotIndex, this.currentContainer, this.slotIndex);
@@ -119,7 +113,6 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         }
     }
 
-    // Logika pro přesun mezi kontejnery
     private void TransferItem(IItemContainer fromContainer, int fromIndex, IItemContainer toContainer, int toIndex)
     {
         InventoryItem itemFrom = fromContainer.GetItem(fromIndex);
@@ -127,13 +120,11 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
 
         if (itemFrom == null) return;
 
-        // A) Cílový slot je prázdný -> Prostý přesun
         if (itemTo == null)
         {
             toContainer.SetItem(toIndex, itemFrom);
             fromContainer.SetItem(fromIndex, null);
         }
-        // B) Cílový slot má stejný item a je stackovatelný -> Sloučení
         else if (itemTo.itemName == itemFrom.itemName && itemTo.stackable)
         {
             int spaceLeft = itemTo.maxStackSize - itemTo.quantity;
@@ -143,15 +134,14 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
                 itemTo.quantity += amountToMove;
                 itemFrom.quantity -= amountToMove;
 
-                toContainer.SetItem(toIndex, itemTo); // Aktualizace UI
+                toContainer.SetItem(toIndex, itemTo);
 
                 if (itemFrom.quantity <= 0)
                     fromContainer.SetItem(fromIndex, null);
                 else
-                    fromContainer.SetItem(fromIndex, itemFrom); // Aktualizace zbytku
+                    fromContainer.SetItem(fromIndex, itemFrom);
             }
         }
-        // C) Cílový slot má jiný item -> Prohození (Swap mezi kontejnery)
         else
         {
             toContainer.SetItem(toIndex, itemFrom);
@@ -181,5 +171,17 @@ public class ItemSlotUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDr
         ghostRect.sizeDelta = sourceRect.sizeDelta;
     
         dragGhost.transform.position = Input.mousePosition;
+    }
+    
+    public InventoryItem GetItem()
+    {
+        if (currentContainer == null) return null;
+        return currentContainer.GetItem(slotIndex);
+    }
+
+    public void SetItem(InventoryItem item)
+    {
+        if (currentContainer == null) return;
+        currentContainer.SetItem(slotIndex, item);
     }
 }

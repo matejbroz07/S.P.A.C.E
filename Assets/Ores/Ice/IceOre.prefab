@@ -60,6 +60,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 437eb04514fc0d84781c9c0c88d016c5, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 82fcb9d0c0ad2f34ba9ec236db37f2df, type: 2}
     - target: {fileID: 919132149155446097, guid: 437eb04514fc0d84781c9c0c88d016c5, type: 3}
       propertyPath: m_Name
       value: IceOre
@@ -103,7 +107,7 @@ MonoBehaviour:
   itemInteractionText: Pick up
   itemInteractionKey: E
   icon: {fileID: 21300000, guid: 4f037994c48f4eb43a4e1eb00eaf058b, type: 3}
-  quantity: 3
+  quantity: 1
   stackable: 1
   maxStackSize: 64
 --- !u!64 &3881564588813299134
@@ -125,7 +129,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -5495902117074765545, guid: 437eb04514fc0d84781c9c0c88d016c5, type: 3}
 --- !u!54 &7240787698874094216
@@ -151,7 +155,7 @@ Rigidbody:
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0

@@ -7,6 +7,9 @@ public class DepositScript : MonoBehaviour
     public string itemInventoryName;
     public Sprite icon;
     public int maxStackSize;
+    
+    [Header("Co z toho padá na zem (Pro drona)")]
+    public GameObject oreDropPrefab;
 
     public float maxHp = 100f;
     public float currentHp;
@@ -16,7 +19,6 @@ public class DepositScript : MonoBehaviour
     private int totalOre;
     private int droppedOre;
 
-    [Obsolete("Obsolete")]
     void Start()
     {
         currentHp = maxHp;
@@ -31,19 +33,40 @@ public class DepositScript : MonoBehaviour
         return totalOre - droppedOre;
     }
 
-    public void MineDamage(float amount)
+    // --- ZMĚNA: Přidán parametr 'bool isDrone = false' ---
+    public void MineDamage(float amount, bool isDrone = false)
     {
-        float previousHP = currentHp;
+        float previousHp = currentHp;
         currentHp -= amount;
 
-        int oreBefore = Mathf.FloorToInt(previousHP / hpPerItem);
+        int oreBefore = Mathf.FloorToInt(previousHp / hpPerItem);
         int oreAfter  = Mathf.FloorToInt(Mathf.Max(currentHp, 0) / hpPerItem);
 
         int oreToDrop = oreBefore - oreAfter;
 
         for (int i = 0; i < oreToDrop; i++)
         {
-            inventory.AddItem(itemInventoryName, icon, 1, true, maxStackSize);
+            if (isDrone)
+            {
+                // 1. TĚŽÍ DRON -> Ruda padá fyzicky na zem
+                if (oreDropPrefab != null)
+                {
+                    // Vypočítáme náhodnou pozici, ať itemy neskáčou úplně do sebe
+                    Vector3 randomOffset = new Vector3(UnityEngine.Random.Range(-1f, 1f), 1f, UnityEngine.Random.Range(-1f, 1f));
+                    Instantiate(oreDropPrefab, transform.position + randomOffset, Quaternion.identity);
+                }
+                else
+                {
+                    Debug.LogWarning("V DepositScript chybí Ore Drop Prefab!");
+                }
+            }
+            else
+            {
+                // 2. TĚŽÍ HRÁČ -> Ruda jde rovnou do inventáře
+                inventory.AddItem(itemInventoryName, icon, 1, true, maxStackSize);
+            }
+
+            // Ať už to vzal hráč nebo dron, kámen o rudu přišel
             droppedOre++;
         }
 

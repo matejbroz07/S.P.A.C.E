@@ -59,7 +59,7 @@ PrefabInstance:
     - target: {fileID: 4308197066605193736, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
       propertyPath: 'm_Materials.Array.data[1]'
       value: 
-      objectReference: {fileID: 2100000, guid: 976c336296eda5a48b741e20dc3efe11, type: 2}
+      objectReference: {fileID: 2100000, guid: 82fcb9d0c0ad2f34ba9ec236db37f2df, type: 2}
     m_RemovedComponents:
     - {fileID: 1044043826539399934, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
     - {fileID: 250383132340137976, guid: 4add12b9b6c01a44393d186173d282fd, type: 3}
@@ -95,6 +95,7 @@ MonoBehaviour:
   itemInventoryName: Ice
   icon: {fileID: 21300000, guid: 4f037994c48f4eb43a4e1eb00eaf058b, type: 3}
   maxStackSize: 64
+  oreDropPrefab: {fileID: 3747531345771259804, guid: 78e2b4b29d3a25d4a870579d788cdc75, type: 3}
   maxHp: 100
   currentHp: 0
   hpPerItem: 5

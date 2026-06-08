@@ -3,23 +3,25 @@ using UnityEngine;
 
 public class InventoryHandler : MonoBehaviour, IItemContainer
 {
-    public static InventoryHandler Instance { get; private set; }
+    public static InventoryHandler Instance { get; private set; } 
 
     [Header("Inventory Settings")]
     [SerializeField] private int maxSlots = 20;
 
     [Header("Current Inventory")]
-    [SerializeField] private List<InventoryItem> items = new List<InventoryItem>();
+    [SerializeField] private List<InventoryItem> items = new List<InventoryItem>(); 
 
     [Header("UI Settings")]
-    [SerializeField] private GameObject inventoryCanvas;
-    [SerializeField] private GameObject inventoryPanel;
-    [SerializeField] private GameObject itemSlotPrefab;
+    [SerializeField] private GameObject inventoryCanvas; 
+    [SerializeField] private GameObject inventoryPanel; 
+    [SerializeField] private GameObject itemSlotPrefab; 
+    
+    [SerializeField] private GameObject panelTerminal;
+    
+    private List<ItemSlotUI> slotUIs = new List<ItemSlotUI>(); 
+    public bool IsInventoryOpen { get; set; } 
 
-    private List<ItemSlotUI> slotUIs = new List<ItemSlotUI>();
-    public bool IsInventoryOpen { get; private set; } = false;
-
-    public delegate void OnInventoryChanged();
+    public delegate void OnInventoryChanged();      
     public event OnInventoryChanged InventoryChanged;
 
     private void Awake()
@@ -30,18 +32,20 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
 
     private void Start()
     {
-        if (inventoryCanvas != null) inventoryCanvas.SetActive(false);
+        if (inventoryCanvas != null) inventoryCanvas.SetActive(false); 
 
         items.Clear();
-        for (int i = 0; i < maxSlots; i++) items.Add(null);
+        for (int i = 0; i < maxSlots; i++) items.Add(null); 
 
         GenerateSlots();
-        InventoryChanged += UpdateInventoryUI;
+        InventoryChanged += UpdateInventoryUI; 
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Tab))
+        if (StorageUnit.OpenStorageCount > 0) return;
+        
+        if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.Escape)) 
         {
             ToggleInventory();
         }
@@ -49,15 +53,15 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
 
     public void ToggleInventory()
     {
-        IsInventoryOpen = !IsInventoryOpen;
+        IsInventoryOpen = !IsInventoryOpen; 
         
         if (inventoryCanvas != null)
-            inventoryCanvas.SetActive(IsInventoryOpen);
+            inventoryCanvas.SetActive(IsInventoryOpen); 
 
         if (IsInventoryOpen)
         {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None; 
+            Cursor.visible = true; 
             InventoryChanged?.Invoke();
         }
         else
@@ -69,38 +73,35 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
 
     private void GenerateSlots()
     {
-        if (inventoryPanel == null || itemSlotPrefab == null) return;
-
+        if (inventoryPanel == null || itemSlotPrefab == null) return; 
+        
         Canvas canvasComp = inventoryCanvas != null ? inventoryCanvas.GetComponent<Canvas>() : inventoryPanel.GetComponentInParent<Canvas>();
 
         foreach (Transform child in inventoryPanel.transform)
-            Destroy(child.gameObject);
+            Destroy(child.gameObject); 
         
-        slotUIs.Clear();
+        slotUIs.Clear(); 
 
         for (int i = 0; i < maxSlots; i++)
         {
-            GameObject slotObj = Instantiate(itemSlotPrefab, inventoryPanel.transform);
-            ItemSlotUI slotUI = slotObj.GetComponent<ItemSlotUI>();
-            if (slotUI == null) slotUI = slotObj.AddComponent<ItemSlotUI>();
+            GameObject slotObj = Instantiate(itemSlotPrefab, inventoryPanel.transform); 
+            ItemSlotUI slotUI = slotObj.GetComponent<ItemSlotUI>(); 
+            if (slotUI == null) slotUI = slotObj.AddComponent<ItemSlotUI>(); 
             
-            // TADY byla chyba - teď už to projde, protože třída implementuje IItemContainer
-            slotUI.Initialize(this, i, canvasComp);
-            slotUIs.Add(slotUI);
+            slotUI.Initialize(this, i, canvasComp); 
+            slotUIs.Add(slotUI); 
         }
     }
-
+    
     private void UpdateInventoryUI()
     {
-        if (!IsInventoryOpen) return;
-
+        // OPRAVA: Zrušena blokace přes if (!IsInventoryOpen). 
+        // Vždy, když se změní data, bezpečně překreslíme sloty.
         for (int i = 0; i < slotUIs.Count; i++)
         {
-            if (i < items.Count) slotUIs[i].UpdateSlot(items[i]);
+            if (i < items.Count) slotUIs[i].UpdateSlot(items[i]); 
         }
     }
-
-    // --- IMPLEMENTACE ROZHRANÍ IItemContainer ---
 
     public InventoryItem GetItem(int index)
     {
@@ -121,13 +122,12 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
 
     public bool CanAddItem(InventoryItem item, int index) => true;
 
-    // --- PŮVODNÍ LOGIKA INVENTÁŘE ---
-
     public int AddItem(string itemName, Sprite icon, int quantity, bool stackable = true, int maxStackSize = 99)
     {
-        if (quantity <= 0) return 0;
+        if (quantity <= 0) return 0; 
         int remainingQuantity = quantity;
 
+        // 1. FÁZE: Zkusíme to nacpat do existujících stacků
         if (stackable)
         {
             foreach (InventoryItem existing in items)
@@ -140,17 +140,19 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
                         int toAdd = Mathf.Min(remainingQuantity, availableSpace);
                         existing.quantity += toAdd;
                         remainingQuantity -= toAdd;
-                        if (remainingQuantity == 0) break;
+                        if (remainingQuantity <= 0) break;
                     }
                 }
             }
         }
-
+        
+        // 2. FÁZE: Hledáme prázdný slot
         if (remainingQuantity > 0)
         {
             for (int i = 0; i < maxSlots && remainingQuantity > 0; i++)
             {
-                if (items[i] == null)
+                // OPRAVA: Mnohem chytřejší detekce "prázdného" slotu!
+                if (items[i] == null || string.IsNullOrEmpty(items[i].itemName) || items[i].quantity <= 0)
                 {
                     int newStackAmount = Mathf.Min(remainingQuantity, maxStackSize);
                     items[i] = new InventoryItem(itemName, icon, newStackAmount, stackable, maxStackSize);
@@ -158,8 +160,18 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
                 }
             }
         }
+        
+        // 3. FÁZE: Férová notifikace
+        // Spočítáme, kolik předmětů jsme REÁLNĚ uložili do batohu
+        int actuallyAdded = quantity - remainingQuantity;
+        
+        // Zobrazíme notifikaci pouze tehdy, pokud jsme opravdu něco sebrali
+        if (actuallyAdded > 0)
+        {
+            NotificationManager.Instance.ShowNotification(itemName, actuallyAdded, Color.white);
+            InventoryChanged?.Invoke();
+        }
 
-        InventoryChanged?.Invoke();
         return remainingQuantity;
     }
 
@@ -171,7 +183,7 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
 
         InventoryItem item1 = items[index1]; 
         InventoryItem item2 = items[index2];
-
+        
         if (item1 != null && item2 != null && item1.itemName == item2.itemName && item1.stackable && item2.stackable)
         {
             int total = item1.quantity + item2.quantity;
@@ -190,6 +202,46 @@ public class InventoryHandler : MonoBehaviour, IItemContainer
         {
             items[index1] = item2;
             items[index2] = item1;
+        }
+        
+        InventoryChanged?.Invoke();
+    }
+    
+    // Zjistí, kolik dané suroviny hráč celkem má
+    public int GetTotalItemCount(string itemName)
+    {
+        int total = 0;
+        foreach (InventoryItem item in items)
+        {
+            if (item != null && item.itemName == itemName)
+            {
+                total += item.quantity;
+            }
+        }
+        return total;
+    }
+
+    // Odebere přesný počet surovin z inventáře
+    public void RemoveItems(string itemName, int amountToRemove)
+    {
+        int remainingToRemove = amountToRemove;
+
+        for (int i = 0; i < maxSlots; i++)
+        {
+            if (items[i] != null && items[i].itemName == itemName)
+            {
+                if (items[i].quantity > remainingToRemove)
+                {
+                    items[i].quantity -= remainingToRemove;
+                    remainingToRemove = 0;
+                    break;
+                }
+                else
+                {
+                    remainingToRemove -= items[i].quantity;
+                    items[i] = null; // Slot se vyprázdní
+                }
+            }
         }
         InventoryChanged?.Invoke();
     }

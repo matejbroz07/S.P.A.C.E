@@ -88,6 +88,7 @@ MonoBehaviour:
   itemInventoryName: Regolit
   icon: {fileID: 21300000, guid: ac50c835d75f71c4d80d4bacdfc67601, type: 3}
   maxStackSize: 64
+  oreDropPrefab: {fileID: 8198557463305794771, guid: d9698ae490b2f3c48ad5756b04e279e5, type: 3}
   maxHp: 100
   currentHp: 0
   hpPerItem: 5

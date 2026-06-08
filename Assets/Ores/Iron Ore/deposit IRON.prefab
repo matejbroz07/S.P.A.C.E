@@ -92,6 +92,7 @@ MonoBehaviour:
   itemInventoryName: Iron Ore
   icon: {fileID: 21300000, guid: 790c0183265bf83449dcfcf39038c000, type: 3}
   maxStackSize: 64
+  oreDropPrefab: {fileID: 3420424318484477273, guid: 699daf6cead24bb4798e40da8d2f1b8f, type: 3}
   maxHp: 100
   currentHp: 0
   hpPerItem: 5
